@@ -1,1 +1,1 @@
-Different things I do to learn ML and Data Science.
+Different things I do to learn ML.
