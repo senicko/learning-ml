@@ -112,7 +112,7 @@ class KNearestNeighbor(object):
         """
         num_test = X.shape[0]
         num_train = self.X_train.shape[0]
-        dists = np.zeros((num_test, num_train))
+
         #########################################################################
         # Compute the l2 distance between all test points and all training      #
         # points without using any explicit loops, and store the result in      #
@@ -178,10 +178,8 @@ class KNearestNeighbor(object):
 
             # np.bincount counts how many occurrences of each digit there is in closest_y
             # array (we can do that as we know our labels are nonnegative ints 0 - 9).
-            # Then we can use np.argmax to select the index with maximum count.
-            # np.argmax by default does min index tie breaking.
+            # Then we can use np.argmax to select the index with maximum count. # np.argmax by default does min index tie breaking.
 
-            print(closest_y, np.bincount(closest_y), np.argmax(np.bincount(closest_y)))
             y_pred[i] = np.argmax(np.bincount(closest_y))
 
         return y_pred
