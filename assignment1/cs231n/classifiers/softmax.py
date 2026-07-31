@@ -22,30 +22,36 @@ def softmax_loss_naive(W, X, y, reg):
     - loss as single float
     - gradient with respect to weights W; an array of same shape as W
     """
-    # Initialize the loss and gradient to zero.
-    loss = 0.0
+    # Initialize the loss and gradient to zero
+    # this loss is a total loss, for all X samples
+    loss = 0.0 # This is the total loss
     dW = np.zeros_like(W)
 
     # compute the loss and the gradient
     num_classes = W.shape[1]
     num_train = X.shape[0]
     for i in range(num_train):
+        # This is a (vector x matrix) multiplication
+        # It calculates score for each class [D x C]
+        # Resulting shape of scores is [C]
         scores = X[i].dot(W)
 
-        # compute the probabilities in numerically stable way
+        # compute the probabilities in numerically stable way meaning
+        # that we need to subtract max value from all values, so that
+        # our exponential function doesn't explode.
         scores -= np.max(scores)
         p = np.exp(scores)
-        p /= p.sum()  # normalize
+        p /= p.sum()  # normalize (this is the softmax)
         logp = np.log(p)
-
         loss -= logp[y[i]]  # negative log probability is the loss
 
+        for k in range(num_classes):
+            dW[:, k] += X[i] * (p[k] - (y[i] == k))
 
-    # normalized hinge loss plus regularization
+    # softmax loss plus regularization
     loss = loss / num_train + reg * np.sum(W * W)
 
     #############################################################################
-    # TODO:                                                                     #
     # Compute the gradient of the loss function and store it dW.                #
     # Rather that first computing the loss and then computing the derivative,   #
     # it may be simpler to compute the derivative at the same time that the     #
@@ -53,6 +59,8 @@ def softmax_loss_naive(W, X, y, reg):
     # code above to compute the gradient.                                       #
     #############################################################################
 
+    dW /= num_train
+    dW += 2 * reg * W
 
     return loss, dW
 
