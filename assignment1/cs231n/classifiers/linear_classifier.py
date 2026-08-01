@@ -13,14 +13,14 @@ class LinearClassifier(object):
         self.W = None
 
     def train(
-        self,
-        X,
-        y,
-        learning_rate=1e-3,
-        reg=1e-5,
-        num_iters=100,
-        batch_size=200,
-        verbose=False,
+            self,
+            X,
+            y,
+            learning_rate=1e-3,
+            reg=1e-5,
+            num_iters=100,
+            batch_size=200,
+            verbose=False,
     ):
         """
         Train this linear classifier using stochastic gradient descent.
@@ -41,7 +41,7 @@ class LinearClassifier(object):
         """
         num_train, dim = X.shape
         num_classes = (
-            np.max(y) + 1
+                np.max(y) + 1
         )  # assume y takes values 0...K-1 where K is number of classes
         if self.W is None:
             # lazily initialize W
@@ -50,11 +50,11 @@ class LinearClassifier(object):
         # Run stochastic gradient descent to optimize W
         loss_history = []
         for it in range(num_iters):
-            X_batch = None
-            y_batch = None
+            indices = np.random.choice(np.arange(num_train), batch_size, replace=True)
+            X_batch = X[indices]
+            y_batch = y[indices]
 
             #########################################################################
-            # TODO:                                                                 #
             # Sample batch_size elements from the training data and their           #
             # corresponding labels to use in this round of gradient descent.        #
             # Store the data in X_batch and their corresponding labels in           #
@@ -65,17 +65,21 @@ class LinearClassifier(object):
             # replacement is faster than sampling without replacement.              #
             #########################################################################
 
-
             # evaluate loss and gradient
-            loss, grad = self.loss(X_batch, y_batch, reg)
+            loss, grad = self.loss(
+                X_batch=X_batch,
+                y_batch=y_batch,
+                reg=reg
+            )
+
             loss_history.append(loss)
 
-            # perform parameter update
             #########################################################################
-            # TODO:                                                                 #
             # Update the weights using the gradient and the learning rate.          #
             #########################################################################
 
+            # use SGD to update model weights
+            self.W -= learning_rate * grad
 
             if verbose and it % 100 == 0:
                 print("iteration %d / %d: loss %f" % (it, num_iters, loss))
@@ -96,13 +100,14 @@ class LinearClassifier(object):
           array of length N, and each element is an integer giving the predicted
           class.
         """
-        y_pred = np.zeros(X.shape[0])
+
         ###########################################################################
         # TODO:                                                                   #
         # Implement this method. Store the predicted labels in y_pred.            #
         ###########################################################################
 
-        return y_pred
+        y_pred = X @ self.W # [N, C]
+        return np.argmax(y_pred, axis=1)
 
     def loss(self, X_batch, y_batch, reg):
         """
@@ -119,26 +124,31 @@ class LinearClassifier(object):
         - loss as a single float
         - gradient with respect to self.W; an array of the same shape as W
         """
-        pass
+        return softmax_loss_vectorized(
+            W=self.W,
+            X=X_batch,
+            y=y_batch,
+            reg=reg,
+        )
 
     def save(self, fname):
-      """Save model parameters."""
-      fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
-      params = {"W": self.W}
-      np.save(fpath, params)
-      print(fname, "saved.")
-    
+        """Save model parameters."""
+        fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
+        params = {"W": self.W}
+        np.save(fpath, params)
+        print(fname, "saved.")
+
     def load(self, fname):
-      """Load model parameters."""
-      fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
-      if not os.path.exists(fpath):
-        print(fname, "not available.")
-        return False
-      else:
-        params = np.load(fpath, allow_pickle=True).item()
-        self.W = params["W"]
-        print(fname, "loaded.")
-        return True
+        """Load model parameters."""
+        fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
+        if not os.path.exists(fpath):
+            print(fname, "not available.")
+            return False
+        else:
+            params = np.load(fpath, allow_pickle=True).item()
+            self.W = params["W"]
+            print(fname, "loaded.")
+            return True
 
 
 class LinearSVM(LinearClassifier):

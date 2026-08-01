@@ -42,8 +42,7 @@ def softmax_loss_naive(W, X, y, reg):
         scores -= np.max(scores)
         p = np.exp(scores)
         p /= p.sum()  # normalize (this is the softmax)
-        logp = np.log(p)
-        loss -= logp[y[i]]  # negative log probability is the loss
+        loss -= np.log(p[y[i]])  # negative log probability is the loss
 
         for k in range(num_classes):
             dW[:, k] += X[i] * (p[k] - (y[i] == k))
@@ -73,18 +72,28 @@ def softmax_loss_vectorized(W, X, y, reg):
     """
     # Initialize the loss and gradient to zero.
     loss = 0.0
-    dW = np.zeros_like(W)
+    dW = np.zeros_like(W) # [D x C]
 
+    num_train = X.shape[0]
 
     #############################################################################
-    # TODO:                                                                     #
     # Implement a vectorized version of the softmax loss, storing the           #
     # result in loss.                                                           #
     #############################################################################
 
+    # Scores [N x C] - Matrix of linear combination with weights for each class
+    scores = X @ W
+    scores -= np.max(scores, axis=1, keepdims=True) # subtract max from scores to make exponential function numerically stable
+
+    # Softmax [N x C] - Matrix of softmax function values
+    p = np.exp(scores)
+    p /= p.sum(axis=1, keepdims=True) # Sum values in each row, and divide scores matrix by column vector of this sums
+
+    # Loss
+    loss = np.sum(-np.log(p[np.arange(num_train), y]))
+    loss = loss / num_train + reg * np.sum(W ** 2)
 
     #############################################################################
-    # TODO:                                                                     #
     # Implement a vectorized version of the gradient for the softmax            #
     # loss, storing the result in dW.                                           #
     #                                                                           #
@@ -93,5 +102,11 @@ def softmax_loss_vectorized(W, X, y, reg):
     # loss.                                                                     #
     #############################################################################
 
+    # Select cells for the "valid" classes for each
+    # image, and subtract 1 from the valid class score.
+    E = p.copy()
+    E[np.arange(num_train), y] -= 1
+
+    dW = (X.T @ E) / num_train + 2 * reg * W
 
     return loss, dW
